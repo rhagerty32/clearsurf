@@ -710,6 +710,7 @@ getStaticIPv4Settings() {
 
     # Set static IP directly (replace with your desired values)
     IPV4_ADDRESS= getCurrentIP
+    echo IP Address set to $IPV4_ADDRESS
     IPv4gw="192.168.1.1"
     
     # Skip the DHCPChoice dialog by setting it to "Yes"
@@ -2317,6 +2318,9 @@ main() {
     if [[ "${useUpdateVars}" == false ]]; then
         displayFinalMessage "${pw}"
     fi
+
+    echo -e "pihole\npihole\n" | pihole -a -p
+
 
     # If the Web interface was installed,
     if [[ "${INSTALL_WEB_INTERFACE}" == true ]]; then
