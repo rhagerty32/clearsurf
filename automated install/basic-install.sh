@@ -814,43 +814,14 @@ setDNS() {
     # Set DNS choices directly to "Cloudflare"
     DNSchoices="Cloudflare"
 
-    # Rest of the function remains unchanged
-    result=0
-    case ${result} in
-        "${DIALOG_CANCEL}" | "${DIALOG_ESC}")
-            printf "  %b Cancel was selected, exiting installer%b\\n" "${COL_LIGHT_RED}" "${COL_NC}"
-            exit 1
-            ;;
-    esac
-
-    # Depending on the user's choice, set the GLOBAL variables to the IP of the respective provider
-    if [[ "${DNSchoices}" == "Custom" ]]
-    then
-        # Rest of the code for "Custom" option
-    else
-        # Save the old Internal Field Separator in a variable,
-        OIFS=$IFS
-        # and set the new one to newline
-        IFS=$'\n'
-        for DNSServer in ${DNS_SERVERS}
-        do
-            DNSName="$(cut -d';' -f1 <<< "${DNSServer}")"
-            if [[ "${DNSchoices}" == "${DNSName}" ]]
-            then
-                PIHOLE_DNS_1="$(cut -d';' -f2 <<< "${DNSServer}")"
-                PIHOLE_DNS_2="$(cut -d';' -f3 <<< "${DNSServer}")"
-                break
-            fi
-        done
-        # Restore the IFS to what it was
-        IFS=${OIFS}
-    fi
+    # Set the DNS variables directly for Cloudflare
+    PIHOLE_DNS_1="1.1.1.1"
+    PIHOLE_DNS_2="1.0.0.1"
 
     # Display final selection
-    local DNSIP=${PIHOLE_DNS_1}
-    [[ -z ${PIHOLE_DNS_2} ]] || DNSIP+=", ${PIHOLE_DNS_2}"
-    printf "  %b Using upstream DNS: %s (%s)\\n" "${INFO}" "${DNSchoices}" "${DNSIP}"
+    printf "  %b Using upstream DNS: %s (%s, %s)\\n" "${INFO}" "${DNSchoices}" "${PIHOLE_DNS_1}" "${PIHOLE_DNS_2}"
 }
+
 
 # Allow the user to enable/disable logging
 setLogging() {
