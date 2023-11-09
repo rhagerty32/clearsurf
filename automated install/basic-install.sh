@@ -704,7 +704,7 @@ collect_v4andv6_information() {
 
 getStaticIPv4Settings() {
     # Set static IP directly (replace with your desired values)
-    IPV4_ADDRESS="192.168.1.100"
+    IPV4_ADDRESS="192.168.1.141"
     IPv4gw="192.168.1.1"
     
     # Skip the DHCPChoice dialog by setting it to "Yes"
