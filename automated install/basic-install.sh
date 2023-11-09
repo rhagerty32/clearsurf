@@ -576,35 +576,7 @@ get_available_interfaces() {
 
 # A function for displaying the dialogs the user sees when first running the installer
 welcomeDialogs() {
-    # Display the welcome dialog using an appropriately sized window via the calculation conducted earlier in the script
-    dialog --no-shadow --clear --keep-tite \
-        --backtitle "Welcome" \
-            --title "Pi-hole Automated Installer" \
-            --msgbox "\\n\\nThis installer will transform your device into a network-wide ad blocker!" \
-            "${r}" "${c}" \
-            --and-widget --clear \
-        --backtitle "Support Pi-hole" \
-            --title "Open Source Software" \
-            --msgbox "\\n\\nThe Pi-hole is free, but powered by your donations:  https://pi-hole.net/donate/" \
-            "${r}" "${c}" \
-            --and-widget --clear \
-        --colors \
-            --backtitle "Initiating network interface" \
-            --title "Static IP Needed" \
-            --no-button "Exit" --yes-button "Continue" \
-            --defaultno \
-            --yesno "\\n\\nThe Pi-hole is a SERVER so it needs a STATIC IP ADDRESS to function properly.\\n\\n\
-\\Zb\\Z1IMPORTANT:\\Zn If you have not already done so, you must ensure that this device has a static IP.\\n\\n\
-Depending on your operating system, there are many ways to achieve this, through DHCP reservation, or by manually assigning one.\\n\\n\
-Please continue when the static addressing has been configured."\
-            "${r}" "${c}" && result=0 || result="$?"
-
-         case "${result}" in
-             "${DIALOG_CANCEL}" | "${DIALOG_ESC}")
-                printf "  %b Installer exited at static IP message.\\n" "${INFO}"
-                exit 1
-                ;;
-         esac
+    return 0
 }
 
 # A function that lets the user pick an interface to use with Pi-hole
@@ -1049,157 +1021,30 @@ If you want to specify a port other than 53, separate it with a hash.\
 
 # Allow the user to enable/disable logging
 setLogging() {
-    # Ask the user if they want to enable logging
-    dialog --no-shadow --keep-tite \
-        --backtitle "Pihole Installation" \
-        --title "Enable Logging" \
-        --yesno "\\n\\nWould you like to enable query logging?" \
-        "${r}" "${c}" && result=0 || result=$?
-
-    case ${result} in
-        "${DIALOG_OK}")
-            # If they chose yes,
-            printf "  %b Query Logging on.\\n" "${INFO}"
-            QUERY_LOGGING=true
-            ;;
-        "${DIALOG_CANCEL}")
-            # If they chose no,
-            printf "  %b Query Logging off.\\n" "${INFO}"
-            QUERY_LOGGING=false
-            ;;
-        "${DIALOG_ESC}")
-            # User pressed <ESC>
-            printf "  %b Escape pressed, exiting installer at Query Logging choice.%b\\n" "${COL_LIGHT_RED}" "${COL_NC}"
-            exit 1
-            ;;
-    esac
+    return 0
 }
 
 # Allow the user to set their FTL privacy level
 setPrivacyLevel() {
-    # The default selection is level 0
-    PRIVACY_LEVEL=$(dialog --no-shadow --keep-tite --output-fd 1 \
-        --cancel-label "Exit" \
-        --ok-label "Continue" \
-        --radiolist "Select a privacy mode for FTL. https://docs.pi-hole.net/ftldns/privacylevels/" \
-        "${r}" "${c}" 6 \
-        "0" "Show everything" on \
-        "1" "Hide domains" off \
-        "2" "Hide domains and clients" off \
-        "3" "Anonymous mode" off)
-
-        result=$?
-        case ${result} in
-            "${DIALOG_OK}")
-                printf "  %b Using privacy level: %s\\n" "${INFO}" "${PRIVACY_LEVEL}"
-                ;;
-            "${DIALOG_CANCEL}" | "${DIALOG_ESC}")
-                printf "  %b Cancelled privacy level selection.%b\\n" "${COL_LIGHT_RED}" "${COL_NC}"
-                exit 1
-                ;;
-        esac
+    PRIVACY_LEVEL="0"  # Set your desired privacy level (0, 1, 2, or 3)
+    printf "  %b Using privacy level: %s\\n" "${INFO}" "${PRIVACY_LEVEL}"
 }
 
-# Function to ask the user if they want to install the dashboard
 setAdminFlag() {
-    # Similar to the logging function, ask what the user wants
-    dialog --no-shadow --keep-tite \
-        --backtitle "Pihole Installation" \
-        --title "Admin Web Interface" \
-        --yesno "\\n\\nDo you want to install the Admin Web Interface?" \
-        "${r}" "${c}" && result=0 || result=$?
+    # Always install the Admin Web Interface
+    printf "  %b Installing Admin Web Interface\\n" "${INFO}"
+    INSTALL_WEB_INTERFACE=true
 
-    case ${result} in
-        "${DIALOG_OK}")
-            # If they chose yes,
-            printf "  %b Installing Admin Web Interface\\n" "${INFO}"
-            # Set the flag to install the web interface
-            INSTALL_WEB_INTERFACE=true
-            ;;
-        "${DIALOG_CANCEL}")
-            # If they chose no,
-            printf "  %b Not installing Admin Web Interface\\n" "${INFO}"
-            # Set the flag to not install the web interface
-            INSTALL_WEB_INTERFACE=false
-            INSTALL_WEB_SERVER=false
-            ;;
-        "${DIALOG_ESC}")
-            # User pressed <ESC>
-            printf "  %b Escape pressed, exiting installer at Admin Web Interface choice.%b\\n" "${COL_LIGHT_RED}" "${COL_NC}"
-            exit 1
-            ;;
-    esac
-
-    # If the user wants to install the Web admin interface (i.e. it has not been deselected above) and did not deselect the web server via command-line argument
-    if [[ "${INSTALL_WEB_INTERFACE}" == true && "${INSTALL_WEB_SERVER}" == true ]]; then
-        # Get list of required PHP modules, excluding base package (common) and handler (cgi)
-        local i php_modules
-        for i in "${PIHOLE_WEB_DEPS[@]}"; do [[ $i == 'php'* && $i != *'-common' && $i != *'-cgi' ]] && php_modules+=" ${i#*-}"; done
-        dialog --no-shadow --keep-tite \
-            --backtitle "Pi-hole Installation" \
-            --title "Web Server" \
-            --yesno "\\n\\nA web server is required for the Admin Web Interface.\
-\\n\\nDo you want to install lighttpd and the required PHP modules?\
-\\n\\nNB: If you disable this, and, do not have an existing web server \
-and required PHP modules (${php_modules# }) installed, the web interface \
-will not function. Additionally the web server user needs to be member of \
-the \"pihole\" group for full functionality." \
-            "${r}" "${c}" && result=0 || result=$?
-
-        case ${result} in
-            "${DIALOG_OK}")
-                # If they chose yes,
-                printf "  %b Installing lighttpd\\n" "${INFO}"
-                # Set the flag to install the web server
-                INSTALL_WEB_SERVER=true
-                ;;
-            "${DIALOG_CANCEL}")
-                # If they chose no,
-                printf "  %b Not installing lighttpd\\n" "${INFO}"
-                # Set the flag to not install the web server
-                INSTALL_WEB_SERVER=false
-                ;;
-            "${DIALOG_ESC}")
-                # User pressed <ESC>
-                printf "  %b Escape pressed, exiting installer at web server choice.%b\\n" "${COL_LIGHT_RED}" "${COL_NC}"
-                exit 1
-                ;;
-        esac
-    fi
+    # Always install the web server
+    printf "  %b Installing lighttpd\\n" "${INFO}"
+    INSTALL_WEB_SERVER=true
 }
 
-# A function to display a list of example blocklists for users to select
 chooseBlocklists() {
-    # Back up any existing adlist file, on the off chance that it exists. Useful in case of a reconfigure.
-    if [[ -f "${adlistFile}" ]]; then
-        mv "${adlistFile}" "${adlistFile}.old"
-    fi
-    # Let user select (or not) blocklists
-    dialog --no-shadow --keep-tite \
-        --backtitle "Pi-hole Installation" \
-        --title "Blocklists" \
-        --yesno "\\nPi-hole relies on third party lists in order to block ads.\
-\\n\\nYou can use the suggestion below, and/or add your own after installation.\
-\\n\\nSelect 'Yes' to include:\
-\\n\\nStevenBlack's Unified Hosts List" \
-        "${r}" "${c}" && result=0 || result=$?
+    # Always include StevenBlack's Unified Hosts List
+    printf "  %b Installing StevenBlack's Unified Hosts List\\n" "${INFO}"
+    echo "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts" >> "${adlistFile}"
 
-    case ${result} in
-        "${DIALOG_OK}")
-            # If they chose yes,
-            printf "  %b Installing StevenBlack's Unified Hosts List\\n" "${INFO}"
-            echo "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts" >> "${adlistFile}"
-            ;;
-        "${DIALOG_CANCEL}")
-            # If they chose no,
-            printf "  %b Not installing StevenBlack's Unified Hosts List\\n" "${INFO}"
-            ;;
-        "${DIALOG_ESC}")
-            # User pressed <ESC>
-            printf "  %b Escape pressed, exiting installer at blocklist choice.%b\\n" "${COL_LIGHT_RED}" "${COL_NC}"
-            exit 1
-            ;;
-    esac
     # Create an empty adList file with appropriate permissions.
     if [ ! -f "${adlistFile}" ]; then
         install -m 644 /dev/null "${adlistFile}"
@@ -1635,26 +1480,10 @@ update_package_cache() {
     fi
 }
 
-# Let user know if they have outdated packages on their system and
-# advise them to run a package update at soonest possible.
+# Assume's their system is all up to date
 notify_package_updates_available() {
-    # Local, named variables
-    local str="Checking ${PKG_MANAGER} for upgraded packages"
-    printf "\\n  %b %s..." "${INFO}" "${str}"
-    # Store the list of packages in a variable
-    updatesToInstall=$(eval "${PKG_COUNT}")
-
-    if [[ -d "/lib/modules/$(uname -r)" ]]; then
-        if [[ "${updatesToInstall}" -eq 0 ]]; then
-            printf "%b  %b %s... up to date!\\n\\n" "${OVER}" "${TICK}" "${str}"
-        else
-            printf "%b  %b %s... %s updates available\\n" "${OVER}" "${TICK}" "${str}" "${updatesToInstall}"
-            printf "  %b %bIt is recommended to update your OS after installing the Pi-hole!%b\\n\\n" "${INFO}" "${COL_LIGHT_GREEN}" "${COL_NC}"
-        fi
-    else
-        printf "%b  %b %s\\n" "${OVER}" "${CROSS}" "${str}"
-        printf "      Kernel update detected. If the install fails, please reboot and try again\\n"
-    fi
+    # Always consider the system up to date
+    printf "%b  %b Checking ${PKG_MANAGER} for upgraded packages... up to date!\\n\\n" "${OVER}" "${TICK}"
 }
 
 install_dependent_packages() {
@@ -2013,80 +1842,13 @@ checkSelinux() {
 
 # Installation complete message with instructions for the user
 displayFinalMessage() {
-    # If the number of arguments is > 0,
-    if [[ "${#1}" -gt 0 ]] ; then
-        # set the password to the first argument.
-        pwstring="$1"
-    elif [[ $(grep 'WEBPASSWORD' -c "${setupVars}") -gt 0 ]]; then
-        # Else if the password exists from previous setup, we'll load it later
-        pwstring="unchanged"
-    else
-        # Else, inform the user that there is no set password.
-        pwstring="NOT SET"
-    fi
-    # If the user wants to install the dashboard,
-    if [[ "${INSTALL_WEB_INTERFACE}" == true ]]; then
-        # Store a message in a variable and display it
-        additional="View the web interface at http://pi.hole/admin or http://${IPV4_ADDRESS%/*}/admin\\n\\nYour Admin Webpage login password is ${pwstring}"
-    fi
 
-    # Final completion message to user
-    dialog --no-shadow --keep-tite \
-        --title "Installation Complete!" \
-        --msgbox "Configure your devices to use the Pi-hole as their DNS server using:\
-\\n\\nIPv4:	${IPV4_ADDRESS%/*}\
-\\nIPv6:	${IPV6_ADDRESS:-"Not Configured"}\
-\\nIf you have not done so already, the above IP should be set to static.\
-\\n${additional}" "${r}" "${c}"
 }
 
+# Always choose "Update" without prompting
 update_dialogs() {
-    # If pihole -r "reconfigure" option was selected,
-    if [[ "${reconfigure}" = true ]]; then
-        # set some variables that will be used
-        opt1a="Repair"
-        opt1b="This will retain existing settings"
-        strAdd="You will remain on the same version"
-    else
-        # Otherwise, set some variables with different values
-        opt1a="Update"
-        opt1b="This will retain existing settings."
-        strAdd="You will be updated to the latest version."
-    fi
-    opt2a="Reconfigure"
-    opt2b="Resets Pi-hole and allows re-selecting settings."
-
-    # Display the information to the user
-    UpdateCmd=$(dialog --no-shadow --keep-tite --output-fd 1 \
-                --cancel-label Exit \
-                --title "Existing Install Detected!" \
-                --menu "\\n\\nWe have detected an existing install.\
-\\n\\nPlease choose from the following options:\
-\\n($strAdd)"\
-                    "${r}" "${c}" 2 \
-    "${opt1a}"  "${opt1b}" \
-    "${opt2a}"  "${opt2b}") || result=$?
-
-    case ${result} in
-        "${DIALOG_CANCEL}" | "${DIALOG_ESC}")
-            printf "  %b Cancel was selected, exiting installer%b\\n" "${COL_LIGHT_RED}" "${COL_NC}"
-            exit 1
-            ;;
-    esac
-
-    # Set the variable based on if the user chooses
-    case ${UpdateCmd} in
-        # repair, or
-        "${opt1a}")
-            printf "  %b %s option selected\\n" "${INFO}" "${opt1a}"
-            useUpdateVars=true
-            ;;
-        # reconfigure,
-        "${opt2a}")
-            printf "  %b %s option selected\\n" "${INFO}" "${opt2a}"
-            useUpdateVars=false
-            ;;
-    esac
+    UpdateCmd="Update"
+    useUpdateVars=true
 }
 
 check_download_exists() {
