@@ -1842,7 +1842,7 @@ checkSelinux() {
 
 # Installation complete message with instructions for the user
 displayFinalMessage() {
-
+    return
 }
 
 # Always choose "Update" without prompting
