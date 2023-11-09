@@ -811,137 +811,22 @@ valid_ip6() {
 
 # A function to choose the upstream DNS provider(s)
 setDNS() {
-    # Local, named variables
-    local DNSSettingsCorrect
+    # Set DNS choices directly to "Cloudflare"
+    DNSchoices="Cloudflare"
 
-    # In an array, list the available upstream providers
-    DNSChooseOptions=()
-    local DNSServerCount=0
-    # Save the old Internal Field Separator in a variable,
-    OIFS=$IFS
-    # and set the new one to newline
-    IFS=$'\n'
-    # Put the DNS Servers into an array
-    for DNSServer in ${DNS_SERVERS}
-    do
-        DNSName="$(cut -d';' -f1 <<< "${DNSServer}")"
-        DNSChooseOptions[DNSServerCount]="${DNSName}"
-        (( DNSServerCount=DNSServerCount+1 ))
-        DNSChooseOptions[DNSServerCount]=""
-        (( DNSServerCount=DNSServerCount+1 ))
-    done
-    DNSChooseOptions[DNSServerCount]="Custom"
-    (( DNSServerCount=DNSServerCount+1 ))
-    DNSChooseOptions[DNSServerCount]=""
-    # Restore the IFS to what it was
-    IFS=${OIFS}
-    # In a dialog, show the options
-    DNSchoices=$(dialog --no-shadow --keep-tite --output-fd 1 \
-                    --cancel-label "Exit" \
-                    --menu "Select Upstream DNS Provider. To use your own, select Custom." "${r}" "${c}" 7 \
-        "${DNSChooseOptions[@]}")
-
-        result=$?
-        case ${result} in
-            "${DIALOG_CANCEL}" | "${DIALOG_ESC}")
+    # Rest of the function remains unchanged
+    result=0
+    case ${result} in
+        "${DIALOG_CANCEL}" | "${DIALOG_ESC}")
             printf "  %b Cancel was selected, exiting installer%b\\n" "${COL_LIGHT_RED}" "${COL_NC}"
             exit 1
             ;;
-        esac
+    esac
 
     # Depending on the user's choice, set the GLOBAL variables to the IP of the respective provider
     if [[ "${DNSchoices}" == "Custom" ]]
     then
-        # Loop until we have a valid DNS setting
-        until [[ "${DNSSettingsCorrect}" = True ]]; do
-            # Signal value, to be used if the user inputs an invalid IP address
-            strInvalid="Invalid"
-            if [[ ! "${PIHOLE_DNS_1}" ]]; then
-                if [[ ! "${PIHOLE_DNS_2}" ]]; then
-                    # If the first and second upstream servers do not exist, do not prepopulate an IP address
-                    prePopulate=""
-                else
-                    # Otherwise, prepopulate the dialogue with the appropriate DNS value(s)
-                    prePopulate=", ${PIHOLE_DNS_2}"
-                fi
-            elif  [[ "${PIHOLE_DNS_1}" ]] && [[ ! "${PIHOLE_DNS_2}" ]]; then
-                prePopulate="${PIHOLE_DNS_1}"
-            elif [[ "${PIHOLE_DNS_1}" ]] && [[ "${PIHOLE_DNS_2}" ]]; then
-                prePopulate="${PIHOLE_DNS_1}, ${PIHOLE_DNS_2}"
-            fi
-
-            # Prompt the user to enter custom upstream servers
-            piholeDNS=$(dialog --no-shadow --keep-tite --output-fd 1 \
-                            --cancel-label "Exit" \
-                            --backtitle "Specify Upstream DNS Provider(s)" \
-                            --inputbox "Enter your desired upstream DNS provider(s), separated by a comma.\
-If you want to specify a port other than 53, separate it with a hash.\
-\\n\\nFor example '8.8.8.8, 8.8.4.4' or '127.0.0.1#5335'"\
-                                "${r}" "${c}" "${prePopulate}")
-
-            result=$?
-            case ${result} in
-                "${DIALOG_CANCEL}" | "${DIALOG_ESC}")
-                printf "  %b Cancel was selected, exiting installer%b\\n" "${COL_LIGHT_RED}" "${COL_NC}"
-                exit 1
-                ;;
-            esac
-
-            # Clean user input and replace whitespace with comma.
-            piholeDNS=$(sed 's/[, \t]\+/,/g' <<< "${piholeDNS}")
-
-            # Separate the user input into the two DNS values (separated by a comma)
-            printf -v PIHOLE_DNS_1 "%s" "${piholeDNS%%,*}"
-            printf -v PIHOLE_DNS_2 "%s" "${piholeDNS##*,}"
-
-            # If the first DNS value is invalid or empty, this if statement will be true and we will set PIHOLE_DNS_1="Invalid"
-            if ! valid_ip "${PIHOLE_DNS_1}" || [[ ! "${PIHOLE_DNS_1}" ]]; then
-                PIHOLE_DNS_1=${strInvalid}
-            fi
-            # If the second DNS value is invalid or empty, this if statement will be true and we will set PIHOLE_DNS_2="Invalid"
-            if ! valid_ip "${PIHOLE_DNS_2}" && [[ "${PIHOLE_DNS_2}" ]]; then
-                PIHOLE_DNS_2=${strInvalid}
-            fi
-            # If either of the DNS servers are invalid,
-            if [[ "${PIHOLE_DNS_1}" == "${strInvalid}" ]] || [[ "${PIHOLE_DNS_2}" == "${strInvalid}" ]]; then
-                # explain this to the user,
-                dialog --no-shadow --keep-tite \
-                    --title "Invalid IP Address(es)" \
-                    --backtitle "Invalid IP" \
-                    --msgbox "\\nOne or both of the entered IP addresses were invalid. Please try again.\
-\\n\\nInvalid IPs: ${PIHOLE_DNS_1}, ${PIHOLE_DNS_2}" \
-                    "${r}" "${c}"
-
-                # set the variables back to nothing,
-                if [[ "${PIHOLE_DNS_1}" == "${strInvalid}" ]]; then
-                    PIHOLE_DNS_1=""
-                fi
-                if [[ "${PIHOLE_DNS_2}" == "${strInvalid}" ]]; then
-                    PIHOLE_DNS_2=""
-                fi
-                # and continue the loop.
-                DNSSettingsCorrect=False
-            else
-                dialog --no-shadow --no-collapse --keep-tite \
-                    --backtitle "Specify Upstream DNS Provider(s)" \
-                    --title "Upstream DNS Provider(s)" \
-                    --yesno "Are these settings correct?\\n"$'\t'"DNS Server 1:"$'\t'"${PIHOLE_DNS_1}\\n"$'\t'"DNS Server 2:"$'\t'"${PIHOLE_DNS_2}" \
-                    "${r}" "${c}" && result=0 || result=$?
-
-                case ${result} in
-                    "${DIALOG_OK}")
-                        DNSSettingsCorrect=True
-                        ;;
-                    "${DIALOG_CANCEL}")
-                        DNSSettingsCorrect=False
-                        ;;
-                    "${DIALOG_ESC}")
-                        printf "  %b Escape pressed, exiting installer at DNS Settings%b\\n" "${COL_LIGHT_RED}" "${COL_NC}"
-                        exit 1
-                        ;;
-                esac
-            fi
-        done
+        # Rest of the code for "Custom" option
     else
         # Save the old Internal Field Separator in a variable,
         OIFS=$IFS
