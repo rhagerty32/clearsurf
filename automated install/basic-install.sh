@@ -2321,7 +2321,6 @@ main() {
 
     echo -e "pihole\npihole\n" | pihole -a -p
 
-
     # If the Web interface was installed,
     if [[ "${INSTALL_WEB_INTERFACE}" == true ]]; then
         # If there is a password,
