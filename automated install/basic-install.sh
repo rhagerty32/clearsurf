@@ -704,7 +704,7 @@ collect_v4andv6_information() {
 
 getStaticIPv4Settings() {
     getCurrentIP() {
-        ping -c 1 -W 1 "$host_name" | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' | head -n 1
+        ping -c 1 -W 1 "Pihole" | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' | head -n 1
     }
 
 
