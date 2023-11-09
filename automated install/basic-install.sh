@@ -703,8 +703,13 @@ collect_v4andv6_information() {
 }
 
 getStaticIPv4Settings() {
+    getCurrentIP() {
+        ping -c 1 -W 1 "$host_name" | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' | head -n 1
+    }
+
+
     # Set static IP directly (replace with your desired values)
-    IPV4_ADDRESS="192.168.1.141"
+    IPV4_ADDRESS= getCurrentIP
     IPv4gw="192.168.1.1"
     
     # Skip the DHCPChoice dialog by setting it to "Yes"
