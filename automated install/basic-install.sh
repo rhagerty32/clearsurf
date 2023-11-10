@@ -2357,3 +2357,5 @@ main() {
 if [[ "${SKIP_INSTALL}" != true ]] ; then
     main "$@"
 fi
+
+exit 0
