@@ -2312,12 +2312,7 @@ main() {
     # Download and compile the aggregated block list
     runGravity
 
-    # Update local and remote versions via updatechecker
-    /opt/pihole/updatecheck.sh
-
-    if [[ "${useUpdateVars}" == false ]]; then
-        displayFinalMessage "${pw}"
-    fi
+    sleep 2
 
     echo -e "pihole\npihole\n" | pihole -a -p
 
