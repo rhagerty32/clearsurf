@@ -707,10 +707,11 @@ getStaticIPv4Settings() {
         ping -c 1 -W 1 "Pihole" | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' | head -n 1
     }
 
+    echo Current IP Address is $IPV4_ADDRESS
 
     # Set static IP directly (replace with your desired values)
-    IPV4_ADDRESS= getCurrentIP
-    echo IP Address set to $IPV4_ADDRESS
+    IPV4_ADDRESS="192.169.1.148"
+    echo Static IP Address set to $IPV4_ADDRESS
     IPv4gw="192.168.1.1"
     
     # Skip the DHCPChoice dialog by setting it to "Yes"
