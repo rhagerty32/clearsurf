@@ -29,24 +29,24 @@
 2. Insert Micro SD into Pi. Then give it power and connect ethernet
 3. Open up terminal on your computer and SSH into the Pi (find IP through pinging "Pihole.local")
 4. Enter password "pihole"
-5. Create a bash script by running this command: "sudo nano piStartup.sh"
+5. Create a bash script by running this command: `sudo nano piStartup.sh`
 6. Enter this code into the file:\
-    '#!/bin/bash
+    `#!/bin/bash`
 
-    #Get initial network coonnection\
-    sleep 10
+    `#Get initial network coonnection`\
+    `sleep 10`
 
-    #Clone Clear-Surf Software\
-    git clone https://github.com/rhagerty32/clearsurf.git
+    `#Clone Clear-Surf Software`\
+    `git clone https://github.com/rhagerty32/clearsurf.git`
 
-    #Navigate to correct Directory\
-    cd ~/pi-hole/'automated install'/
+    `#Navigate to correct Directory`\
+    `cd ~/pi-hole/'automated install'/`
 
-    #Initialize Pi-Hole Installation Script\
-    bash basic-install.sh &'
+    `#Initialize Pi-Hole Installation Script`\
+    `bash basic-install.sh &`
     
-7. Go into boot file by running this command: "sudo crontab -e"
-8. At the bottom enter "@reboot bash piStartup.sh"
+7. Go into boot file by running this command: `sudo crontab -e`
+8. At the bottom enter: `@reboot bash piStartup.sh"`
 
 After following this process you now have a device that is ready to be restarted. When that happens, it should auto install and configure Pi-Hole on your network. You can initiate this by running "sudo reboot" or, you can just run the command manually by typing "bash piStartup.sh"
 
