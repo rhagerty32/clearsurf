@@ -31,7 +31,7 @@
 4. Enter password "pihole"
 5. Create a bash script by running this command: "sudo nano piStartup.sh"
 6. Enter this code into the file:\
-    #!/bin/bash
+    '#!/bin/bash
 
     #Get initial network coonnection\
     sleep 10
@@ -43,7 +43,7 @@
     cd ~/pi-hole/'automated install'/
 
     #Initialize Pi-Hole Installation Script\
-    bash basic-install.sh &
+    bash basic-install.sh &'
     
 7. Go into boot file by running this command: "sudo crontab -e"
 8. At the bottom enter "@reboot bash piStartup.sh"
