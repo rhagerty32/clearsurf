@@ -30,19 +30,19 @@
 3. Open up terminal on your computer and SSH into the Pi (find IP through pinging "Pihole.local")
 4. Enter password "pihole"
 5. Create a bash script by running this command: "sudo nano piStartup.sh"
-6. Enter this code into the file:
+6. Enter this code into the file:\
     #!/bin/bash
 
-    #Get initial network coonnection
+    #Get initial network coonnection\
     sleep 10
 
-    #Clone Clear-Surf Software
+    #Clone Clear-Surf Software\
     git clone https://github.com/rhagerty32/clearsurf.git
 
-    #Navigate to correct Directory
+    #Navigate to correct Directory\
     cd ~/pi-hole/'automated install'/
 
-    #Initialize Pi-Hole Installation Script
+    #Initialize Pi-Hole Installation Script\
     bash basic-install.sh &
     
 7. Go into boot file by running this command: "sudo crontab -e"
