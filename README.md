@@ -14,6 +14,44 @@
 
 <!-- markdownlint-enable MD033 -->
 
+# ClearSurf Installation Guide
+
+## Here are the steps to help setup your ClearSurf Pi-Hole. Keep in mind, all these commands are for MacOS and might be different for windows.
+
+1. Install Raspberry PiOS on your device:
+    - Install Pi Imager from here: https://www.raspberrypi.com/software/
+    - Select applicable device
+    - Select the standard OS (the top on I believe)
+    - Choose external storage (Micro SD card that will go in the Pi)
+    - If it asks, say no to using the keychain for the wifi password
+    - Say yes to adjusting settings and change the password to "pihole"
+    - Then begin writing (should a few minutes)
+2. Insert Micro SD into Pi. Then give it power and connect ethernet
+3. Open up terminal on your computer and SSH into the Pi (find IP through pinging "Pihole.local")
+4. Enter password "pihole"
+5. Create a bash script by running this command: "sudo nano piStartup.sh"
+6. Enter this code into the file:
+    #!/bin/bash
+
+    #Get initial network coonnection
+    sleep 10
+
+    #Clone Clear-Surf Software
+    git clone https://github.com/rhagerty32/clearsurf.git
+
+    #Navigate to correct Directory
+    cd ~/pi-hole/'automated install'/
+
+    #Initialize Pi-Hole Installation Script
+    bash basic-install.sh &
+    
+7. Go into boot file by running this command: "sudo crontab -e"
+8. At the bottom enter "@reboot bash piStartup.sh"
+
+After following this process you now have a device that is ready to be restarted. When that happens, it should auto install and configure Pi-Hole on your network. You can initiate this by running "sudo reboot" or, you can just run the command manually by typing "bash piStartup.sh"
+
+-----
+
 The Pi-hole® is a [DNS sinkhole](https://en.wikipedia.org/wiki/DNS_Sinkhole) that protects your devices from unwanted content without installing any client-side software.
 
 - **Easy-to-install**: our dialogs walk you through the simple installation process in less than ten minutes
@@ -28,81 +66,6 @@ The Pi-hole® is a [DNS sinkhole](https://en.wikipedia.org/wiki/DNS_Sinkhole) th
 - **Free**: open source software that helps ensure _you_ are the sole person in control of your privacy
 
 -----
-
-## One-Step Automated Install
-
-Those who want to get started quickly and conveniently may install Pi-hole using the following command:
-
-### `curl -sSL https://install.pi-hole.net | bash`
-
-## Alternative Install Methods
-
-Piping to `bash` is [controversial](https://pi-hole.net/2016/07/25/curling-and-piping-to-bash), as it prevents you from [reading code that is about to run](https://github.com/pi-hole/pi-hole/blob/master/automated%20install/basic-install.sh) on your system. Therefore, we provide these alternative installation methods which allow code review before installation:
-
-### Method 1: Clone our repository and run
-
-```bash
-git clone --depth 1 https://github.com/pi-hole/pi-hole.git Pi-hole
-cd "Pi-hole/automated install/"
-sudo bash basic-install.sh
-```
-
-### Method 2: Manually download the installer and run
-
-```bash
-wget -O basic-install.sh https://install.pi-hole.net
-sudo bash basic-install.sh
-```
-
-### Method 3: Using Docker to deploy Pi-hole
-
-Please refer to the [Pi-hole docker repo](https://github.com/pi-hole/docker-pi-hole) to use the Official Docker Images.
-
-## [Post-install: Make your network take advantage of Pi-hole](https://docs.pi-hole.net/main/post-install/)
-
-Once the installer has been run, you will need to [configure your router to have **DHCP clients use Pi-hole as their DNS server**](https://discourse.pi-hole.net/t/how-do-i-configure-my-devices-to-use-pi-hole-as-their-dns-server/245). This router configuration will ensure that all devices connecting to your network will have content blocked without any further intervention.
-
-If your router does not support setting the DNS server, you can [use Pi-hole's built-in DHCP server](https://discourse.pi-hole.net/t/how-do-i-use-pi-holes-built-in-dhcp-server-and-why-would-i-want-to/3026); be sure to disable DHCP on your router first (if it has that feature available).
-
-As a last resort, you can manually set each device to use Pi-hole as their DNS server.
-
------
-
-## Pi-hole is free but powered by your support
-
-There are many reoccurring costs involved with maintaining free, open-source, and privacy-respecting software; expenses which [our volunteer developers](https://github.com/orgs/pi-hole/people) pitch in to cover out-of-pocket. This is just one example of how strongly we feel about our software and the importance of keeping it maintained.
-
-Make no mistake: **your support is absolutely vital to help keep us innovating!**
-
-### [Donations](https://pi-hole.net/donate)
-
-Donating using our Sponsor Button is **extremely helpful** in offsetting a portion of our monthly expenses:
-
-### Alternative support
-
-If you'd rather not donate (_which is okay!_), there are other ways you can help support us:
-
-- [GitHub Sponsors](https://github.com/sponsors/pi-hole/)
-- [Patreon](https://patreon.com/pihole)
-- [Hetzner Cloud](https://hetzner.cloud/?ref=7aceisRX3AzA) _affiliate link_
-- [Digital Ocean](https://www.digitalocean.com/?refcode=344d234950e1) _affiliate link_
-- [Stickermule](https://www.stickermule.com/unlock?ref_id=9127301701&utm_medium=link&utm_source=invite) _earn a $10 credit after your first purchase_
-- [Amazon US](https://www.amazon.com/exec/obidos/redirect-home/pihole09-20) _affiliate link_
-- Spreading the word about our software and how you have benefited from it
-
-### Contributing via GitHub
-
-We welcome _everyone_ to contribute to issue reports, suggest new features, and create pull requests.
-
-If you have something to add - anything from a typo through to a whole new feature, we're happy to check it out! Just make sure to fill out our template when submitting your request; the questions it asks will help the volunteers quickly understand what you're aiming to achieve.
-
-You'll find that the [install script](https://github.com/pi-hole/pi-hole/blob/master/automated%20install/basic-install.sh) and the [debug script](https://github.com/pi-hole/pi-hole/blob/master/advanced/Scripts/piholeDebug.sh) have an abundance of comments, which will help you better understand how Pi-hole works. They're also a valuable resource to those who want to learn how to write scripts or code a program! We encourage anyone who likes to tinker to read through it and submit a pull request for us to review.
-
------
-
-## Getting in touch with us
-
-While we are primarily reachable on our [Discourse User Forum](https://discourse.pi-hole.net/), we can also be found on various social media outlets.
 
 **Please be sure to check the FAQs** before starting a new discussion, as we do not have the spare time to reply to every request for assistance.
 
@@ -129,24 +92,6 @@ Some of the statistics you can integrate include:
 - Queries forwarded (to your chosen upstream DNS server)
 - Queries cached
 - Unique clients
-
-Access the API via [`telnet`](https://github.com/pi-hole/FTL), the Web (`admin/api.php`) and Command Line (`pihole -c -j`). You can find out [more details over here](https://discourse.pi-hole.net/t/pi-hole-api/1863).
-
-### The Command-Line Interface
-
-The [pihole](https://docs.pi-hole.net/core/pihole-command/) command has all the functionality necessary to fully administer the Pi-hole, without the need for the Web Interface. It's fast, user-friendly, and auditable by anyone with an understanding of `bash`.
-
-Some notable features include:
-
-- [Whitelisting, Blacklisting, and Regex](https://docs.pi-hole.net/core/pihole-command/#whitelisting-blacklisting-and-regex)
-- [Debugging utility](https://docs.pi-hole.net/core/pihole-command/#debugger)
-- [Viewing the live log file](https://docs.pi-hole.net/core/pihole-command/#tail)
-- [Updating Ad Lists](https://docs.pi-hole.net/core/pihole-command/#gravity)
-- [Querying Ad Lists for blocked domains](https://docs.pi-hole.net/core/pihole-command/#query)
-- [Enabling and Disabling Pi-hole](https://docs.pi-hole.net/core/pihole-command/#enable-disable)
-- ... and _many_ more!
-
-You can read our [Core Feature Breakdown](https://docs.pi-hole.net/core/pihole-command/#pi-hole-core) for more information.
 
 ### The Web Interface Dashboard
 
