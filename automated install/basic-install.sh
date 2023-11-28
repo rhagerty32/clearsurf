@@ -708,7 +708,7 @@ getStaticIPv4Settings() {
     echo Current IP Address is $IPV4_ADDRESS
 
     # Set static IP directly (replace with your desired values)
-    IPV4_ADDRESS="192.169.1.148"
+    IPV4_ADDRESS="192.168.1.148"
     echo Static IP Address set to $IPV4_ADDRESS
     IPv4gw="192.168.1.1"
     
