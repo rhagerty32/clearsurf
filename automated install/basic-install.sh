@@ -2314,7 +2314,8 @@ main() {
 
     echo -e "pihole\npihole\n" | pihole -a -p
 
-    pihole -w www.googleadservices.com metrics.icloud.com
+    pihole -w www.googleadservices.com metrics.icloud.com 
+    pihole -b androidtvwatsonfe-pa.googleapis.com androidtvchannels-pa.googleapis.com
 
     # If the Web interface was installed,
     if [[ "${INSTALL_WEB_INTERFACE}" == true ]]; then
