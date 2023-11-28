@@ -9,8 +9,6 @@
 #
 # This file is copyright under the latest version of the EUPL.
 # Please see LICENSE file for your rights under this license.
-
-# pi-hole.net/donate
 #
 # Install with this command (from your Linux machine):
 #

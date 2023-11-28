@@ -46,7 +46,7 @@
     `bash basic-install.sh &`
     
 7. Go into boot file by running this command: `sudo crontab -e`
-8. At the bottom enter: `@reboot bash piStartup.sh"`
+8. At the bottom enter: `@reboot bash piStartup.sh`
 
 After following this process you now have a device that is ready to be restarted. When that happens, it should auto install and configure Pi-Hole on your network. You can initiate this by running "sudo reboot" or, you can just run the command manually by typing "bash piStartup.sh"
 
