@@ -2087,7 +2087,6 @@ main() {
         # they are root and all is good
         printf "  %b %s\\n" "${TICK}" "${str}"
         # Show the Pi-hole logo so people know it's genuine since the logo and name are trademarked
-        show_ascii_berry
         make_temporary_log
     else
         # Otherwise, they do not have enough privileges, so let the user know
