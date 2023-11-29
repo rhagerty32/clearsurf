@@ -2161,9 +2161,9 @@ main() {
         # Create directory for Pi-hole storage
         install -d -m 755 /etc/pihole/
         # Determine available interfaces
-        get_available_interfaces
+        #get_available_interfaces
         # Find interfaces and let the user choose one
-        chooseInterface
+        #chooseInterface
         # find IPv4 and IPv6 information of the device
         collect_v4andv6_information
         # Decide what upstream DNS Servers to use
