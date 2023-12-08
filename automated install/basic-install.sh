@@ -850,9 +850,10 @@ setAdminFlag() {
 }
 
 chooseBlocklists() {
-    # Always include StevenBlack's Unified Hosts List
     printf "  %b Installing StevenBlack's Unified Hosts List\\n" "${INFO}"
     echo "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts" >> "${adlistFile}"
+    printf "  %b Installing ClearSurf's Anti-Pornography List\\n" "${INFO}"
+    echo "https://raw.githubusercontent.com/chadmayfield/my-pihole-blocklists/master/lists/pi_blocklist_porn_all.list" >> "${adlistFile}"
 
     # Create an empty adList file with appropriate permissions.
     if [ ! -f "${adlistFile}" ]; then
@@ -871,6 +872,7 @@ installDefaultBlocklists() {
         return;
     fi
         echo "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts" >> "${adlistFile}"
+        echo "https://raw.githubusercontent.com/chadmayfield/my-pihole-blocklists/master/lists/pi_blocklist_porn_all.list" >> "${adlistFile}"
 }
 
 # Check if /etc/dnsmasq.conf is from pi-hole.  If so replace with an original and install new in .d directory
