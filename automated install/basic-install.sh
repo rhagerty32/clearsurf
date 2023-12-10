@@ -699,12 +699,6 @@ collect_v4andv6_information() {
 }
 
 getStaticIPv4Settings() {
-    getCurrentIP() {
-        ping -c 1 -W 1 "Pihole" | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' | head -n 1
-    }
-
-    echo Current IP Address is $IPV4_ADDRESS
-
     # Set static IP directly (replace with your desired values)
     IPV4_ADDRESS="192.168.1.148"
     echo Static IP Address set to $IPV4_ADDRESS
@@ -712,13 +706,6 @@ getStaticIPv4Settings() {
     
     # Skip the DHCPChoice dialog by setting it to "Yes"
     DHCPChoice="Yes"
-    
-    # Uncomment the following line if you want to skip the IP conflict warning for DHCPChoice "Yes"
-    # dialog --no-shadow --keep-tite --cancel-label "Exit" --backtitle "IP information" --title "FYI: IP Conflict" --msgbox "\\nIt is possible your router could still try to assign this IP to a device, which would cause a conflict, but in most cases the router is smart enough to not do that.\n\nIf you are worried, either manually set the address, or modify the DHCP reservation pool so it does not include the IP you want.\n\nIt is also possible to use a DHCP reservation, but if you are going to do that, you might as well set a static address." "${r}" "${c}" && result=0 || result=$?
-    
-    # Uncomment the following lines if you want to skip the user input for DHCPChoice "No"
-    # ipSettingsCorrect=true
-    # _staticIPv4Temp="IPv4 Address: 192.168.1.100\nIPv4 Gateway: 192.168.1.1"
     
     # Rest of the function remains unchanged
     case ${DHCPChoice} in
@@ -746,7 +733,6 @@ getStaticIPv4Settings() {
     
     setDHCPCD
 }
-
 
 # Configure networking via dhcpcd
 setDHCPCD() {
@@ -824,7 +810,6 @@ setDNS() {
     # Display final selection
     printf "  %b Using upstream DNS: %s (%s, %s)\\n" "${INFO}" "${DNSchoices}" "${PIHOLE_DNS_1}" "${PIHOLE_DNS_2}"
 }
-
 
 # Allow the user to enable/disable logging
 setLogging() {
