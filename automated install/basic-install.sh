@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC1090
-
 # Pi-hole: A black hole for Internet advertisements
+# (c) Pi-hole (https://pi-hole.net)
 # Network-wide ad blocking via your own hardware.
 #
 # Installs and Updates Pi-hole
@@ -11,31 +11,26 @@
 #
 # Install with this command (from your Linux machine):
 #
-
+# curl -sSL https://install.pi-hole.net | bash
 # -e option instructs bash to immediately exit if any command [1] has a non-zero exit status
 # We do not want users to end up with a partially working install, so we exit the script
 # instead of continuing the installation with something broken
 set -e
-
 # Append common folders to the PATH to ensure that all basic commands are available.
 # When using "su" an incomplete PATH could be passed: https://github.com/pi-hole/pi-hole/issues/3209
 export PATH+=':/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
-
 ######## VARIABLES #########
 # For better maintainability, we store as much information that can change in variables
 # This allows us to make a change in one place that can propagate to all instances of the variable
 # These variables should all be GLOBAL variables, written in CAPS
 # Local variables will be in lowercase and will exist only within functions
 # It's still a work in progress, so you may see some variance in this guideline until it is complete
-
 # Dialog result codes
 # dialog code values can be set by environment variables, we only override if
 # the env var is not set or empty.
 : "${DIALOG_OK:=0}"
 : "${DIALOG_CANCEL:=1}"
 : "${DIALOG_ESC:=255}"
-
-
 # List of supported DNS servers
 DNS_SERVERS=$(cat << EOM
 Google (ECS, DNSSEC);8.8.8.8;8.8.4.4;2001:4860:4860:0:0:0:0:8888;2001:4860:4860:0:0:0:0:8844
@@ -49,7 +44,6 @@ Quad9 (filtered, ECS, DNSSEC);9.9.9.11;149.112.112.11;2620:fe::11;2620:fe::fe:11
 Cloudflare (DNSSEC);1.1.1.1;1.0.0.1;2606:4700:4700::1111;2606:4700:4700::1001
 EOM
 )
-
 # Location for final installation log storage
 installLogLoc="/etc/pihole/install.log"
 # This is an important file as it contains information specific to the machine it's being installed on
@@ -58,11 +52,8 @@ setupVars="/etc/pihole/setupVars.conf"
 lighttpdConfig="/etc/lighttpd/lighttpd.conf"
 # This is a file used for the colorized output
 coltable="/opt/pihole/COL_TABLE"
-
 # Root of the web server
 webroot="/var/www/html"
-
-
 # We clone (or update) two git repositories during the install. This helps to make sure that we always have the latest versions of the relevant files.
 # web is used to set up the Web admin interface.
 # Pi-hole contains various setup scripts and files which are critical to the installation.
@@ -82,7 +73,6 @@ FTL_CONFIG_FILE="${PI_HOLE_CONFIG_DIR}/pihole-FTL.conf"
 if [ -z "$useUpdateVars" ]; then
     useUpdateVars=false
 fi
-
 adlistFile="/etc/pihole/adlists.list"
 # Pi-hole needs an IP address; to begin, these variables are empty since we don't know what the IP is until this script can run
 IPV4_ADDRESS=${IPV4_ADDRESS}
@@ -92,15 +82,12 @@ QUERY_LOGGING=true
 INSTALL_WEB_INTERFACE=true
 PRIVACY_LEVEL=0
 CACHE_SIZE=10000
-
 if [ -z "${USER}" ]; then
     USER="$(id -un)"
 fi
-
 # dialog dimensions: Let dialog handle appropriate sizing.
 r=20
 c=70
-
 ######## Undocumented Flags. Shhh ########
 # These are undocumented flags; some of which we can use when repairing an installation
 # The runUnattended flag is one example of this
@@ -115,7 +102,6 @@ for var in "$@"; do
         "--disable-install-webserver" ) INSTALL_WEB_SERVER=false;;
     esac
 done
-
 # If the color table file exists,
 if [[ -f "${coltable}" ]]; then
     # source it
@@ -133,7 +119,6 @@ else
     DONE="${COL_LIGHT_GREEN} done!${COL_NC}"
     OVER="\\r\\033[K"
 fi
-
 # A simple function that just echoes out our logo in ASCII format
 # This lets users know that it is a Pi-hole, LLC product
 show_ascii_berry() {
@@ -160,29 +145,23 @@ show_ascii_berry() {
                   ..'''.${COL_NC}
 "
 }
-
 is_command() {
     # Checks to see if the given command (passed as a string argument) exists on the system.
     # The function returns 0 (success) if the command exists, and 1 if it doesn't.
     local check_command="$1"
-
     command -v "${check_command}" >/dev/null 2>&1
 }
-
 os_check() {
     if [ "$PIHOLE_SKIP_OS_CHECK" != true ]; then
         # This function gets a list of supported OS versions from a TXT record at versions.pi-hole.net
         # and determines whether or not the script is running on one of those systems
         local remote_os_domain valid_os valid_version valid_response detected_os detected_version display_warning cmdResult digReturnCode response
         remote_os_domain=${OS_CHECK_DOMAIN_NAME:-"versions.pi-hole.net"}
-
         detected_os=$(grep '^ID=' /etc/os-release | cut -d '=' -f2 | tr -d '"')
         detected_version=$(grep VERSION_ID /etc/os-release | cut -d '=' -f2 | tr -d '"')
-
         cmdResult="$(dig +short -t txt "${remote_os_domain}" @ns1.pi-hole.net 2>&1; echo $?)"
         # Gets the return code of the previous command (last line)
         digReturnCode="${cmdResult##*$'\n'}"
-
         if [ ! "${digReturnCode}" == "0" ]; then
             valid_response=false
         else
@@ -192,13 +171,11 @@ os_check() {
             if [ "${response}" == 0 ]; then
                 valid_response=false
             fi
-
             IFS=" " read -r -a supportedOS < <(echo "${response}" | tr -d '"')
             for distro_and_versions in "${supportedOS[@]}"
             do
                 distro_part="${distro_and_versions%%=*}"
                 versions_part="${distro_and_versions##*=}"
-
                 # If the distro part is a (case-insensitive) substring of the computer OS
                 if [[ "${detected_os^^}" =~ ${distro_part^^} ]]; then
                     valid_os=true
@@ -214,14 +191,11 @@ os_check() {
                 fi
             done
         fi
-
         if [ "$valid_os" = true ] && [ "$valid_version" = true ] && [ ! "$valid_response" = false ]; then
             display_warning=false
         fi
-
         if [ "$display_warning" != false ]; then
             if [ "$valid_response" = false ]; then
-
                 if [ "${digReturnCode}" -eq 0 ]; then
                     errStr="dig succeeded, but response was blank. Please contact support"
                 else
@@ -254,7 +228,6 @@ os_check() {
             printf "      %bhttps://discourse.pi-hole.net/c/bugs-problems-issues/community-help/%b\\n" "${COL_LIGHT_GREEN}" "${COL_NC}"
             printf "\\n"
             exit 1
-
         else
             printf "  %b %bSupported OS detected%b\\n" "${TICK}" "${COL_LIGHT_GREEN}" "${COL_NC}"
         fi
@@ -262,7 +235,6 @@ os_check() {
         printf "  %b %bPIHOLE_SKIP_OS_CHECK env variable set to true - installer will continue%b\\n" "${INFO}" "${COL_LIGHT_GREEN}" "${COL_NC}"
     fi
 }
-
 # This function waits for dpkg to unlock, which signals that the previous apt-get command has finished.
 test_dpkg_lock() {
     i=0
@@ -285,12 +257,10 @@ test_dpkg_lock() {
     # and then report success once dpkg is unlocked.
     return 0
 }
-
 # Compatibility
 package_manager_detect() {
     # TODO - pull common packages for both distributions out into a common variable, then add
     # the distro-specific ones below.
-
     # First check to see if apt-get is installed.
     if is_command apt-get ; then
         # Set some global variables here
@@ -340,7 +310,6 @@ package_manager_detect() {
         LIGHTTPD_GROUP="www-data"
         # and config file
         LIGHTTPD_CFG="lighttpd.conf.debian"
-
     # If apt-get is not found, check for rpm.
     elif is_command rpm ; then
         # Then check if dnf or yum is the package manager
@@ -349,7 +318,6 @@ package_manager_detect() {
         else
             PKG_MANAGER="yum"
         fi
-
         # These variable names match the ones for apt-get. See above for an explanation of what they are for.
         PKG_INSTALL=("${PKG_MANAGER}" install -y)
         # CentOS package manager returns 100 when there are packages to update so we need to || true to prevent the script from exiting.
@@ -361,7 +329,6 @@ package_manager_detect() {
         LIGHTTPD_USER="lighttpd"
         LIGHTTPD_GROUP="lighttpd"
         LIGHTTPD_CFG="lighttpd.conf.fedora"
-
         # If the host OS is centos (or a derivative), epel is required for lighttpd
         if ! grep -qiE 'fedora|fedberry' /etc/redhat-release; then
             if rpm -qa | grep -qi 'epel'; then
@@ -376,7 +343,6 @@ package_manager_detect() {
                 printf "  %b Installed %s\\n" "${TICK}" "${EPEL_PKG}"
             fi
         fi
-
     # If neither apt-get or yum/dnf package managers were found
     else
         # we cannot install required packages
@@ -385,7 +351,6 @@ package_manager_detect() {
         exit
     fi
 }
-
 # A function for checking if a directory is a git repository
 is_repo() {
     # Use a named, local variable instead of the vague $1, which is the first argument passed to this function
@@ -410,13 +375,11 @@ is_repo() {
     # Return the code; if one is not set, return 0
     return "${rc:-0}"
 }
-
 # A function to clone a repo
 make_repo() {
     # Set named variables for better readability
     local directory="${1}"
     local remoteRepo="${2}"
-
     # The message to display when this function is running
     str="Clone ${remoteRepo} into ${directory}"
     # Display the message and use the color table to preface the message with an "info" indicator
@@ -447,7 +410,6 @@ make_repo() {
     popd &> /dev/null || return 1
     return 0
 }
-
 # We need to make sure the repos are up-to-date so we can effectively install Clean out the directory if it exists for git to clone into
 update_repo() {
     # Use named, local variables
@@ -456,7 +418,6 @@ update_repo() {
     # This helps prevent the wrong value from being assigned if you were to set the variable as a GLOBAL one
     local directory="${1}"
     local curBranch
-
     # A variable to store the message we want to display;
     # Again, it's useful to store these in variables in case we need to reuse or change the message;
     # we only need to make one change here
@@ -484,7 +445,6 @@ update_repo() {
     popd &> /dev/null || return 1
     return 0
 }
-
 # A function that combines the previous git functions to update or clone a repo
 getGitFiles() {
     # Setup named variables for the git repos
@@ -501,19 +461,18 @@ getGitFiles() {
         # Show that we're checking it
         printf "%b  %b %s\\n" "${OVER}" "${TICK}" "${str}"
         # Update the repo, returning an error message on failure
-        #update_repo "${directory}" || { printf "\\n  %b: Could not update local repository. Contact support.%b\\n" "${COL_LIGHT_RED}" "${COL_NC}"; exit 1; }
+        update_repo "${directory}" || { printf "\\n  %b: Could not update local repository. Contact support.%b\\n" "${COL_LIGHT_RED}" "${COL_NC}"; exit 1; }
     # If it's not a .git repo,
     else
         # Show an error
         printf "%b  %b %s\\n" "${OVER}" "${CROSS}" "${str}"
         # Attempt to make the repository, showing an error on failure
-        #make_repo "${directory}" "${remoteRepo}" || { printf "\\n  %bError: Could not update local repository. Contact support.%b\\n" "${COL_LIGHT_RED}" "${COL_NC}"; exit 1; }
+        make_repo "${directory}" "${remoteRepo}" || { printf "\\n  %bError: Could not update local repository. Contact support.%b\\n" "${COL_LIGHT_RED}" "${COL_NC}"; exit 1; }
     fi
     echo ""
     # Success via one of the two branches, as the commands would exit if they failed.
     return 0
 }
-
 # Reset a repo to get rid of any local changed
 resetRepo() {
     # Use named variables for arguments
@@ -535,18 +494,14 @@ resetRepo() {
     # Function succeeded, as "git reset" would have triggered a return earlier if it failed
     return 0
 }
-
 find_IPv4_information() {
     # Detects IPv4 address used for communication to WAN addresses.
     # Accepts no arguments, returns no values.
-
     # Named, local variables
     local route
     local IPv4bare
-
     # Find IP used to route to outside world by checking the the route to Google's public DNS server
     route=$(ip route get 8.8.8.8)
-
     # Get just the interface IPv4 address
     # shellcheck disable=SC2059,SC2086
     # disabled as we intentionally want to split on whitespace and have printf populate
@@ -555,36 +510,29 @@ find_IPv4_information() {
     # Get the default gateway IPv4 address (the way to reach the Internet)
     # shellcheck disable=SC2059,SC2086
     printf -v IPv4gw "$(printf ${route#*via })"
-
     if ! valid_ip "${IPv4bare}" ; then
         IPv4bare="127.0.0.1"
     fi
-
     # Append the CIDR notation to the IP address, if valid_ip fails this should return 127.0.0.1/8
     IPV4_ADDRESS=$(ip -oneline -family inet address show | grep "${IPv4bare}/" |  awk '{print $4}' | awk 'END {print}')
 }
-
 # Get available interfaces that are UP
 get_available_interfaces() {
     # There may be more than one so it's all stored in a variable
     availableInterfaces=$(ip --oneline link show up | grep -v "lo" | awk '{print $2}' | cut -d':' -f1 | cut -d'@' -f1)
 }
-
 # A function for displaying the dialogs the user sees when first running the installer
 welcomeDialogs() {
     return 0
 }
-
 # A function that lets the user pick an interface to use with Pi-hole
 chooseInterface() {
     # Turn the available interfaces into a string so it can be used with dialog
     local interfacesList
     # Number of available interfaces
     local interfaceCount
-
     # POSIX compliant way to get the number of elements in an array
     interfaceCount=$(printf "%s\n" "${availableInterfaces}" | wc -l)
-
     # If there is one interface,
     if [[ "${interfaceCount}" -eq 1 ]]; then
         # Set it as the interface to use since there is no other option
@@ -593,7 +541,6 @@ chooseInterface() {
     else
         # Set status for the first entry to be selected
         status="ON"
-
         # While reading through the available interfaces
         for interface in ${availableInterfaces}; do
             # Put all these interfaces into a string
@@ -607,7 +554,6 @@ chooseInterface() {
             --cancel-label "Exit" --ok-label "Select" \
             --radiolist "Choose An Interface (press space to toggle selection)" \
             ${r} ${c} "${interfaceCount}" ${interfacesList})
-
         result=$?
         case ${result} in
             "${DIALOG_CANCEL}"|"${DIALOG_ESC}")
@@ -616,11 +562,9 @@ chooseInterface() {
                 exit 1
                 ;;
         esac
-
         printf "  %b Using interface: %s\\n" "${INFO}" "${PIHOLE_INTERFACE}"
     fi
 }
-
 # This lets us prefer ULA addresses over GUA
 # This caused problems for some users when their ISP changed their IPv6 addresses
 # See https://github.com/pi-hole/pi-hole/issues/1473#issuecomment-301745953
@@ -647,11 +591,9 @@ testIPv6() {
         echo "Link-local"
     fi
 }
-
 find_IPv6_information() {
     # Detects IPv6 address used for communication to WAN addresses.
     mapfile -t IPV6_ADDRESSES <<<"$(ip -6 address | grep 'scope global' | awk '{print $2}')"
-
     # For each address in the array above, determine the type of IPv6 address it is
     for i in "${IPV6_ADDRESSES[@]}"; do
         # Check if it's ULA, GUA, or LL by using the function created earlier
@@ -662,7 +604,6 @@ find_IPv6_information() {
         [[ "${result}" == "GUA" ]] && GUA_ADDRESS="${i%/*}"
         # Else if it's a Link-local address, we cannot use it, so just continue
     done
-
     # Determine which address to be used: Prefer ULA over GUA or don't use any if none found
     # If the ULA_ADDRESS contains a value,
     if [[ -n "${ULA_ADDRESS}" ]]; then
@@ -683,7 +624,6 @@ find_IPv6_information() {
         IPV6_ADDRESS=""
     fi
 }
-
 # A function to collect IPv4 and IPv6 information of the device
 collect_v4andv6_information() {
     find_IPv4_information
@@ -697,8 +637,11 @@ collect_v4andv6_information() {
     find_IPv6_information
     printf "  %b IPv6 address: %s\\n" "${INFO}" "${IPV6_ADDRESS}"
 }
-
 getStaticIPv4Settings() {
+    getCurrentIP() {
+        ping -c 1 -W 1 "Pihole" | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' | head -n 1
+    }
+    echo Current IP Address is $IPV4_ADDRESS
     # Set static IP directly (replace with your desired values)
     IPV4_ADDRESS="192.168.1.148"
     echo Static IP Address set to $IPV4_ADDRESS
@@ -706,6 +649,13 @@ getStaticIPv4Settings() {
     
     # Skip the DHCPChoice dialog by setting it to "Yes"
     DHCPChoice="Yes"
+    
+    # Uncomment the following line if you want to skip the IP conflict warning for DHCPChoice "Yes"
+    # dialog --no-shadow --keep-tite --cancel-label "Exit" --backtitle "IP information" --title "FYI: IP Conflict" --msgbox "\\nIt is possible your router could still try to assign this IP to a device, which would cause a conflict, but in most cases the router is smart enough to not do that.\n\nIf you are worried, either manually set the address, or modify the DHCP reservation pool so it does not include the IP you want.\n\nIt is also possible to use a DHCP reservation, but if you are going to do that, you might as well set a static address." "${r}" "${c}" && result=0 || result=$?
+    
+    # Uncomment the following lines if you want to skip the user input for DHCPChoice "No"
+    # ipSettingsCorrect=true
+    # _staticIPv4Temp="IPv4 Address: 192.168.1.100\nIPv4 Gateway: 192.168.1.1"
     
     # Rest of the function remains unchanged
     case ${DHCPChoice} in
@@ -733,12 +683,10 @@ getStaticIPv4Settings() {
     
     setDHCPCD
 }
-
 # Configure networking via dhcpcd
 setDHCPCD() {
     # Regex for matching a non-commented static ip address setting
     local regex="^[ \t]*static ip_address[ \t]*=[ \t]*${IPV4_ADDRESS}"
-
     # Check if static IP is already set in file
     if grep -q "${regex}" /etc/dhcpcd.conf; then
         printf "  %b Static IP already configured\\n" "${INFO}"
@@ -756,13 +704,11 @@ setDHCPCD() {
         printf "  %b You may need to restart after the install is complete\\n" "${INFO}"
     fi
 }
-
 # Check an IP address to see if it is a valid one
 valid_ip() {
     # Local, named variables
     local ip=${1}
     local stat=1
-
     # Regex matching one IPv4 component, i.e. an integer from 0 to 255.
     # See https://tools.ietf.org/html/rfc1340
     local ipv4elem="(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]?|0)";
@@ -770,18 +716,14 @@ valid_ip() {
     local portelem="(#(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{0,3}|0))?";
     # Build a full IPv4 regex from the above subexpressions
     local regex="^${ipv4elem}\\.${ipv4elem}\\.${ipv4elem}\\.${ipv4elem}${portelem}$"
-
     # Evaluate the regex, and return the result
     [[ $ip =~ ${regex} ]]
-
     stat=$?
     return "${stat}"
 }
-
 valid_ip6() {
     local ip=${1}
     local stat=1
-
     # Regex matching one IPv6 element, i.e. a hex value from 0000 to FFFF
     local ipv6elem="[0-9a-fA-F]{1,4}"
     # Regex matching an IPv6 CIDR, i.e. 1 to 128
@@ -790,48 +732,38 @@ valid_ip6() {
     local portelem="(#(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{0,3}|0))?";
     # Build a full IPv6 regex from the above subexpressions
     local regex="^(((${ipv6elem}))*((:${ipv6elem}))*::((${ipv6elem}))*((:${ipv6elem}))*|((${ipv6elem}))((:${ipv6elem})){7})${v6cidr}${portelem}$"
-
     # Evaluate the regex, and return the result
     [[ ${ip} =~ ${regex} ]]
-
     stat=$?
     return "${stat}"
 }
-
 # A function to choose the upstream DNS provider(s)
 setDNS() {
     # Set DNS choices directly to "Cloudflare"
     DNSchoices="Cloudflare"
-
     # Set the DNS variables directly for Cloudflare
     PIHOLE_DNS_1="1.1.1.1"
     PIHOLE_DNS_2="1.0.0.1"
-
     # Display final selection
     printf "  %b Using upstream DNS: %s (%s, %s)\\n" "${INFO}" "${DNSchoices}" "${PIHOLE_DNS_1}" "${PIHOLE_DNS_2}"
 }
-
 # Allow the user to enable/disable logging
 setLogging() {
     return 0
 }
-
 # Allow the user to set their FTL privacy level
 setPrivacyLevel() {
     PRIVACY_LEVEL="0"  # Set your desired privacy level (0, 1, 2, or 3)
     printf "  %b Using privacy level: %s\\n" "${INFO}" "${PRIVACY_LEVEL}"
 }
-
 setAdminFlag() {
     # Always install the Admin Web Interface
     printf "  %b Installing Admin Web Interface\\n" "${INFO}"
     INSTALL_WEB_INTERFACE=true
-
     # Always install the web server
     printf "  %b Installing lighttpd\\n" "${INFO}"
     INSTALL_WEB_SERVER=true
 }
-
 chooseBlocklists() {
     printf "  %b Installing StevenBlack's Unified Hosts List\\n" "${INFO}"
     echo "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts" >> "${adlistFile}"
@@ -842,10 +774,11 @@ chooseBlocklists() {
 
     # Create an empty adList file with appropriate permissions.
     if [ ! -f "${adlistFile}" ]; then
-        install -m 644 /dev/null "${adlistFile}"
-    else
-        chmod 644 "${adlistFile}"
+@@ -873,6 +875,7 @@ installDefaultBlocklists() {
     fi
+        echo "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts" >> "${adlistFile}"
+        echo "https://raw.githubusercontent.com/chadmayfield/my-pihole-blocklists/master/lists/pi_blocklist_porn_all.list" >> "${adlistFile}"
+        echo "https://easylist.to/easylist/easylist.txt" >> "${adlistFile}"
 }
 
 # Used only in unattended setup
